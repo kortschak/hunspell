@@ -36,28 +36,39 @@ func NewSpell(path, lang string) (*Spell, error) {
 	var affPath, dictPath string
 	if lang != "" {
 		affPath = filepath.Join(path, lang+".aff")
-		_, err := os.Stat(affPath)
-		if err != nil {
-			pe := err.(*os.PathError)
-			pe.Op = "open"
-			return nil, err
-		}
 		dictPath = filepath.Join(path, lang+".dic")
-		_, err = os.Stat(dictPath)
+	}
+	return NewSpellPaths(affPath, dictPath)
+}
+
+// NewSpellPaths returns a spelling checker initialized with the dictionary
+// specified by the affix rule and dictionary files. NewSpellPaths checks
+// for the existence of the each file if the path is not empty.
+func NewSpellPaths(affix, dict string) (*Spell, error) {
+	if affix != "" {
+		_, err := os.Stat(affix)
 		if err != nil {
 			pe := err.(*os.PathError)
 			pe.Op = "open"
 			return nil, err
 		}
 	}
-	aff := C.CString(affPath)
-	dict := C.CString(dictPath)
-	s := &Spell{handle: C.Hunspell_create(aff, dict)}
+	if dict != "" {
+		_, err := os.Stat(dict)
+		if err != nil {
+			pe := err.(*os.PathError)
+			pe.Op = "open"
+			return nil, err
+		}
+	}
+	affC := C.CString(affix)
+	dictC := C.CString(dict)
+	s := &Spell{handle: C.Hunspell_create(affC, dictC)}
 	runtime.SetFinalizer(s, func(h *Spell) {
 		C.Hunspell_destroy(h.handle)
 	})
-	C.free(unsafe.Pointer(aff))
-	C.free(unsafe.Pointer(dict))
+	C.free(unsafe.Pointer(affC))
+	C.free(unsafe.Pointer(dictC))
 	return s, nil
 }
 
