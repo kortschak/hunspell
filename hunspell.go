@@ -30,15 +30,24 @@ type Spell struct {
 // If lang is empty and path is not, an error is returned. NewSpell checks
 // for the existence of the dictionary files.
 func NewSpell(path, lang string) (*Spell, error) {
-	if lang == "" && path != "" {
-		return nil, errors.New("missing lang")
-	}
-	var affPath, dictPath string
-	if lang != "" {
-		affPath = filepath.Join(path, lang+".aff")
-		dictPath = filepath.Join(path, lang+".dic")
+	affPath, dictPath, err := Paths(path, lang)
+	if err != nil {
+		return nil, err
 	}
 	return NewSpellPaths(affPath, dictPath)
+}
+
+// Paths is a convenience function that returns the paths for the affix
+// rule and dictionary files for a given root path and language key.
+func Paths(path, lang string) (aff, dic string, err error) {
+	if lang == "" && path != "" {
+		return "", "", errors.New("missing lang")
+	}
+	if lang != "" {
+		aff = filepath.Join(path, lang+".aff")
+		dic = filepath.Join(path, lang+".dic")
+	}
+	return aff, dic, nil
 }
 
 // NewSpellPaths returns a spelling checker initialized with the dictionary
