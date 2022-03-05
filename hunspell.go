@@ -19,7 +19,7 @@ import (
 )
 
 // Spell is a hunspell spelling checker. A Spell is only valid if it is
-// returned by a successful call to NewSpell.
+// returned by a successful call to NewSpell or NewSpellPaths.
 type Spell struct {
 	handle *C.Hunhandle
 }
